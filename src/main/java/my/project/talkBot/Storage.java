@@ -1,29 +1,41 @@
 package my.project.talkBot;
 
-import java.util.ArrayList;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class Storage {
-    private ArrayList<String> answer;
 
-    public Storage() {
-        answer = new ArrayList<>();
-        answer.add("Стремитесь не к успеху, а к ценностям, которые он дает.");
-        answer.add("Надо любить жизнь больше, чем смысл жизни.");
-        answer.add("Свобода ничего не стоит, если она не включает в себя свободу ошибаться.");
-        answer.add("Мы продукты своего прошлого, но мы не обязаны быть его заложниками.");
-        answer.add("Начинать всегда стоит с того, что сеет сомнения.");
-        answer.add("Я не могу изменить направление ветра, но я могу управлять парусами, чтобы всегда добираться до места назначения.");
-        answer.add("Есть только один способ избежать критики: ничего не делайте, ничего не говорите и будьте никем.");
-        answer.add("Вчера я был умным и поэтому хотел изменить мир. Сегодня я стал мудрым и поэтому меняю себя");
-        answer.add("Успех не окончателен, поражение не фатально. Лишь смелость продолжать имеет значение.");
-        answer.add("80% успеха - это появиться в нужном месте в нужное время.");
-        answer.add("Человек, которым вам суждено стать, — это только тот человек, которым вы сами решите стать.");
-        answer.add("Мы должны признать очевидное: понимают лишь те,кто хочет понять.");
+    public String getQuote() throws IOException, InterruptedException {
+        String text = "";
+        HttpClient client = HttpClient.newHttpClient();
 
-    }
+        URI url = URI.create("http://api.forismatic.com/api/1.0/?method=getQuote&format=json&jsonp=parseQuote");
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-    public String getRandom() {
-        int random = (int) (Math.random() * answer.size());
-        return answer.get(random);
+        if (response.statusCode() == 200) {
+            // передаем парсеру тело ответа в виде строки, содержащей данные в формате JSON
+            JsonElement jsonElement = JsonParser.parseString(response.body());
+            if (!jsonElement.isJsonObject()) { // проверяем, точно ли мы получили JSON-объект
+                text = "Ответ от сервера не соответствует ожидаемому.";
+                return text;
+            }
+            // преобразуем результат разбора текста в JSON-объект
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            text = jsonObject.get("quoteText").getAsString();
+
+        }
+        return text;
     }
 }

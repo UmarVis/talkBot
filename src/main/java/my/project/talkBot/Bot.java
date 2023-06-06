@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Bot extends TelegramLongPollingBot {
@@ -29,10 +30,9 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        try{
-            if(update.hasMessage() && update.getMessage().hasText())
-            {
-                //Извлекаем из объекта сообщение пользователя
+        try {
+            if (update.hasMessage() && update.getMessage().hasText()) {
+                // Извлекаем из объекта сообщение пользователя
                 Message inMess = update.getMessage();
                 //Достаем из inMess id чата пользователя
                 String chatId = inMess.getChatId().toString();
@@ -48,40 +48,22 @@ public class Bot extends TelegramLongPollingBot {
                 //Отправка в чат
                 execute(outMess);
             }
-        } catch (TelegramApiException e) {
+        } catch (TelegramApiException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private String parseMessage(String text) {
-        String response;
+    private String parseMessage(String text) throws IOException, InterruptedException {
+        String response = "";
 
         //Сравниваем текст пользователя с нашими командами, на основе этого формируем ответ
-        if(text.equals("/start"))
+        if (text.equals("/start"))
             response = "Привет! Это бот-цитата. Жми /get, чтобы получить цитату на сегодня";
-        else if(text.equals("/get"))
-            response = storage.getRandom();
+        else if (text.equals("/get"))
+            response = storage.getQuote();
         else
             response = "Сообщение не распознано";
 
         return response;
-    }
-
-    void initKeyboard() // todo
-    {
-        //Создаем объект будущей клавиатуры и выставляем нужные настройки
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        replyKeyboardMarkup.setResizeKeyboard(true); //подгоняем размер
-        replyKeyboardMarkup.setOneTimeKeyboard(false); //скрываем после использования
-
-        //Создаем список с рядами кнопок
-        ArrayList<KeyboardRow> keyboardRows = new ArrayList<>();
-        //Создаем один ряд кнопок и добавляем его в список
-        KeyboardRow keyboardRow = new KeyboardRow();
-        keyboardRows.add(keyboardRow);
-        //Добавляем одну кнопку с текстом "Просвяти" наш ряд
-        keyboardRow.add(new KeyboardButton("Просвяти"));
-        //добавляем лист с одним рядом кнопок в главный объект
-        replyKeyboardMarkup.setKeyboard(keyboardRows);
     }
 }
